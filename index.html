@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Universe — Solar System Simulation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <!-- Top bar -->
+  <header class="hud-top">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-text">
+        <span class="brand-title">COSMOS</span>
+        <span class="brand-sub">Solar System Simulation</span>
+      </div>
+    </div>
+    <div class="sim-clock">
+      <span class="clock-label">SIMULATED EPOCH</span>
+      <span id="sim-date" class="clock-value">2000-01-01</span>
+    </div>
+    <div class="top-actions">
+      <button id="btn-tour" class="tour-btn" title="Visit the next world">Tour</button>
+      <button id="btn-fullscreen" class="icon-btn" title="Fullscreen" aria-label="Fullscreen">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Left panel: planet focus -->
+  <aside class="hud-panel left-panel">
+    <div class="panel-header">
+      <h2>Bodies</h2>
+      <span class="panel-badge">9</span>
+    </div>
+    <ul id="body-list" class="body-list"></ul>
+  </aside>
+
+  <!-- Right panel: info + toggles -->
+  <aside class="hud-panel right-panel">
+    <div class="panel-header">
+      <h2>Focus</h2>
+    </div>
+    <div id="focus-card" class="focus-card">
+      <div class="focus-name" id="focus-name">Solar System</div>
+      <div class="focus-type" id="focus-type">Overview</div>
+      <div class="focus-stats" id="focus-stats">
+        <div class="stat"><span class="stat-label">Bodies</span><span class="stat-value">Sun + 8 planets</span></div>
+        <div class="stat"><span class="stat-label">Scale</span><span class="stat-value">Aesthetic / relative</span></div>
+        <div class="stat"><span class="stat-label">Motion</span><span class="stat-value">Keplerian orbits</span></div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <h3>Display</h3>
+      <label class="toggle-row">
+        <span>Orbit paths</span>
+        <input type="checkbox" id="toggle-orbits" checked />
+        <span class="toggle-ui"></span>
+      </label>
+      <label class="toggle-row">
+        <span>Labels</span>
+        <input type="checkbox" id="toggle-labels" checked />
+        <span class="toggle-ui"></span>
+      </label>
+      <label class="toggle-row">
+        <span>Asteroid belt</span>
+        <input type="checkbox" id="toggle-asteroids" checked />
+        <span class="toggle-ui"></span>
+      </label>
+      <label class="toggle-row">
+        <span>Follow focus</span>
+        <input type="checkbox" id="toggle-follow" />
+        <span class="toggle-ui"></span>
+      </label>
+    </div>
+
+    <div class="panel-section hints">
+      <h3>Controls</h3>
+      <p><kbd>Drag</kbd> orbit · <kbd>Scroll</kbd> zoom</p>
+      <p><kbd>Space</kbd> pause · <kbd>R</kbd> reset · <kbd>T</kbd> tour</p>
+      <p><kbd>1–9</kbd> jump to body · <kbd>0</kbd> overview</p>
+    </div>
+  </aside>
+
+  <!-- Bottom time controls -->
+  <footer class="hud-bottom">
+    <div class="time-controls">
+      <button id="btn-reset-time" class="ctrl-btn" title="Reset epoch">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+          <path d="M3 3v5h5"/>
+        </svg>
+      </button>
+      <button id="btn-slower" class="ctrl-btn" title="Slower">−</button>
+      <button id="btn-play" class="ctrl-btn play" title="Play / Pause">
+        <svg id="icon-play" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M8 5v14l11-7z"/>
+        </svg>
+        <svg id="icon-pause" class="hidden" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M6 4h4v16H6zm8 0h4v16h-4z"/>
+        </svg>
+      </button>
+      <button id="btn-faster" class="ctrl-btn" title="Faster">+</button>
+    </div>
+
+    <div class="speed-block">
+      <div class="speed-meta">
+        <span class="speed-label">Time Scale</span>
+        <span id="speed-readout" class="speed-value">1 day / sec</span>
+      </div>
+      <input type="range" id="speed-slider" min="0" max="100" value="30" />
+      <div class="speed-ticks">
+        <span>Paused</span>
+        <span>Real</span>
+        <span>Days</span>
+        <span>Years</span>
+        <span>Max</span>
+      </div>
+    </div>
+
+    <div class="status-block">
+      <div class="status-item">
+        <span class="status-dot"></span>
+        <span id="status-text">Running</span>
+      </div>
+      <div class="status-item mono" id="fps-counter">60 FPS</div>
+    </div>
+  </footer>
+
+  <div id="labels-layer" class="labels-layer"></div>
+  <div id="loading" class="loading">
+    <div class="loading-inner">
+      <div class="loading-orbit"></div>
+      <p>Initializing cosmos…</p>
+    </div>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
