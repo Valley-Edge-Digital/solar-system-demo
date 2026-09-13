@@ -616,6 +616,98 @@ html, body {
   border-color: rgba(255, 180, 80, 0.3);
 }
 
+/* ─── Help & fatal overlays ────────────────────────────────── */
+.help-overlay,
+.fatal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  background: rgba(4, 5, 9, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s var(--ease), visibility 0.25s;
+}
+
+.help-overlay.visible,
+.fatal-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.help-card,
+.fatal-card {
+  width: min(420px, calc(100vw - 32px));
+  border-radius: var(--radius);
+  border: 1px solid var(--border-bright);
+  background: var(--glass-strong);
+  box-shadow: var(--shadow);
+  padding: 22px 24px;
+}
+
+.help-card h2,
+.fatal-card h2 {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 14px;
+}
+
+.help-card ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.help-card li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.help-card li span:first-child {
+  order: 2;
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.help-card kbd {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+.help-note {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-mute);
+}
+
+.fatal-card p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+
 /* ─── Loading ──────────────────────────────────────────────── */
 .loading {
   position: fixed;
@@ -656,6 +748,14 @@ html, body {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* ─── Reduced motion ───────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .status-dot { animation: none; }
+  .loading-orbit { animation-duration: 2.4s; }
+  .world-label { transition: none; }
+  .help-overlay, .fatal-overlay { transition: none; }
 }
 
 /* ─── Responsive ───────────────────────────────────────────── */

@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Universe — Solar System Simulation</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='4' fill='%23ffb347'/%3E%3Ccircle cx='8' cy='8' r='7' fill='none' stroke='%236ea8ff' stroke-width='0.75'/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -30,11 +31,17 @@
       </div>
     </div>
     <div class="sim-clock">
-      <span class="clock-label">SIMULATED EPOCH</span>
+      <span class="clock-label">SIMULATED EPOCH · REAL SKY</span>
       <span id="sim-date" class="clock-value">2000-01-01</span>
     </div>
     <div class="top-actions">
       <button id="btn-tour" class="tour-btn" title="Visit the next world">Tour</button>
+      <button id="btn-help" class="icon-btn" title="Shortcuts (?)" aria-label="Shortcuts">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3m.08 4h.01"/>
+          <circle cx="12" cy="12" r="9.25"/>
+        </svg>
+      </button>
       <button id="btn-fullscreen" class="icon-btn" title="Fullscreen" aria-label="Fullscreen">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
           <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
@@ -47,7 +54,7 @@
   <aside class="hud-panel left-panel">
     <div class="panel-header">
       <h2>Bodies</h2>
-      <span class="panel-badge">9</span>
+      <span class="panel-badge" id="body-count">10</span>
     </div>
     <ul id="body-list" class="body-list"></ul>
   </aside>
@@ -61,8 +68,8 @@
       <div class="focus-name" id="focus-name">Solar System</div>
       <div class="focus-type" id="focus-type">Overview</div>
       <div class="focus-stats" id="focus-stats">
-        <div class="stat"><span class="stat-label">Bodies</span><span class="stat-value">Sun + 8 planets</span></div>
-        <div class="stat"><span class="stat-label">Scale</span><span class="stat-value">Aesthetic / relative</span></div>
+        <div class="stat"><span class="stat-label">Bodies</span><span class="stat-value">Sun + 8 planets + Pluto</span></div>
+        <div class="stat"><span class="stat-label">Positions</span><span class="stat-value">Real ephemeris (JPL)</span></div>
         <div class="stat"><span class="stat-label">Motion</span><span class="stat-value">Keplerian orbits</span></div>
       </div>
     </div>
@@ -94,15 +101,16 @@
     <div class="panel-section hints">
       <h3>Controls</h3>
       <p><kbd>Drag</kbd> orbit · <kbd>Scroll</kbd> zoom</p>
-      <p><kbd>Space</kbd> pause · <kbd>R</kbd> reset · <kbd>T</kbd> tour</p>
-      <p><kbd>1–9</kbd> jump to body · <kbd>0</kbd> overview</p>
+      <p><kbd>Space</kbd> pause · <kbd>R</kbd> reset view · <kbd>T</kbd> tour</p>
+      <p><kbd>N</kbd> jump to today · <kbd>1–9</kbd> bodies · <kbd>0</kbd> overview</p>
+      <p><kbd>?</kbd> all shortcuts</p>
     </div>
   </aside>
 
   <!-- Bottom time controls -->
   <footer class="hud-bottom">
     <div class="time-controls">
-      <button id="btn-reset-time" class="ctrl-btn" title="Reset epoch">
+      <button id="btn-reset-time" class="ctrl-btn" title="Jump back to today (real sky)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
           <path d="M3 3v5h5"/>
@@ -145,6 +153,34 @@
   </footer>
 
   <div id="labels-layer" class="labels-layer"></div>
+
+  <!-- Shortcuts overlay -->
+  <div id="help-overlay" class="help-overlay" role="dialog" aria-label="Keyboard shortcuts">
+    <div class="help-card">
+      <h2>Shortcuts</h2>
+      <ul>
+        <li><span><kbd>Space</kbd></span> Play / pause time</li>
+        <li><span><kbd>−</kbd> <kbd>+</kbd></span> Slower / faster</li>
+        <li><span><kbd>R</kbd></span> Reset camera to overview</li>
+        <li><span><kbd>N</kbd></span> Jump back to today's real sky</li>
+        <li><span><kbd>T</kbd></span> Tour the next world</li>
+        <li><span><kbd>1</kbd>–<kbd>9</kbd></span> Jump to a body</li>
+        <li><span><kbd>0</kbd></span> Overview</li>
+        <li><span><kbd>?</kbd> / <kbd>Esc</kbd></span> Open / close this panel</li>
+      </ul>
+      <p class="help-note">Planet positions come from JPL Keplerian elements, so the
+      displayed date is the actual arrangement of the real solar system.</p>
+    </div>
+  </div>
+
+  <!-- Fatal error surface -->
+  <div id="fatal-overlay" class="fatal-overlay">
+    <div class="fatal-card">
+      <h2 class="fatal-title">Something went wrong</h2>
+      <p class="fatal-detail"></p>
+    </div>
+  </div>
+
   <div id="loading" class="loading">
     <div class="loading-inner">
       <div class="loading-orbit"></div>
